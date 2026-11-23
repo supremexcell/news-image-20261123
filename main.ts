@@ -39,6 +39,11 @@ function loadApprovedImage(): Buffer {
   if (bytes.length < 24 || !bytes.subarray(0, 8).equals(PNG_MAGIC)) {
     throw new Error('entry.png is not a PNG file');
   }
+  // The first chunk of a real PNG must be IHDR (bytes 12-16); a file with
+  // the right magic but a different first chunk is not a PNG we trust.
+  if (bytes.subarray(12, 16).toString('ascii') !== 'IHDR') {
+    throw new Error('entry.png has no IHDR chunk where one belongs');
+  }
   const width = bytes.readUInt32BE(16);
   const height = bytes.readUInt32BE(20);
   if (width !== 1024 || height !== 1024) {
